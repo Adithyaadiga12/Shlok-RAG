@@ -16,6 +16,7 @@ import faiss
 import numpy as np
 from fastapi import FastAPI, Query
 from sentence_transformers import SentenceTransformer
+from ask import gemini_call,build_prompt
 
 INDEX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index")
 
@@ -52,7 +53,20 @@ def search(q: str = Query(..., description="natural-language or Sanskrit query")
     return {"query": q, "results": results}
 
 
+
+@app.get("/ask")
+def ask( q : str =Query(..., description="your question in natural language or Sanskrit") ,
+        k : int=Query(5, ge=1, le=50)):
+    """Return the answer to the question using the k most relevant verses."""
+    hits = search(q,k)["results"]
+    prompt = build_prompt(q,hits)
+    answer = gemini_call(prompt)
+    return {"Query": q, "Answer": answer, "Sources": hits}
+
+
 if __name__ == "__main__":
     # lets you start the server with:  python rag/api.py
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
+
+
