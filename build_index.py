@@ -56,6 +56,35 @@ def meta_of(record, translation):
     }
 
 
+def load_reference(rag_dir):
+    """Also index curated entities (who is X) + glossary (what is X).
+    Returns list of (text_to_embed, meta_card)."""
+    out = []
+    ent = os.path.join(rag_dir, "entities.json")
+    glo = os.path.join(rag_dir, "glossary.json")
+
+    if os.path.exists(ent):
+        for e in json.load(open(ent, encoding="utf-8")):
+            aliases = ", ".join(e.get("aliases", []))
+            head = f"{e['name']} ({aliases})" if aliases else e["name"]
+            out.append((f"{head}: {e['description']}", {
+                "id": e["id"], "source": "Entity (" + ", ".join(e.get("sources", [])) + ")",
+                "category": "Entity", "chapter": None, "verse": None,
+                "sanskrit": e.get("sanskrit", ""), "transliteration": "",
+                "translation": e["description"],
+            }))
+
+    if os.path.exists(glo):
+        for g in json.load(open(glo, encoding="utf-8")):
+            out.append((f"{g['term']}: {g['definition']}", {
+                "id": g["id"], "source": "Glossary",
+                "category": "Glossary", "chapter": None, "verse": None,
+                "sanskrit": g.get("sanskrit", ""), "transliteration": "",
+                "translation": g["definition"],
+            }))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0, help="index only first N translated verses (0 = all)")
@@ -84,6 +113,13 @@ def main():
             metas.append(meta_of(r, tr))        # STORE Sanskrit + translation for display
             kept += 1
     print(f"indexed {kept:,} translated verses (skipped {skipped:,} without translation)")
+
+    # ---- also index curated entities + glossary (always, for "who/what is X") ----
+    ref = load_reference(os.path.dirname(VERSES))
+    for t, m in ref:
+        texts.append(t)
+        metas.append(m)
+    print(f"+ {len(ref)} reference entries (entities + glossary)")
 
     # ---- 2. embed the translations ----
     model = SentenceTransformer(args.model)
