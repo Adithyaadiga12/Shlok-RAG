@@ -24,8 +24,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from api import search
 from ask import build_prompt, gemini_call
 
-ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EVAL  = os.path.join(ROOT, "eval", "gita_eval.json")
+HERE  = os.path.dirname(os.path.abspath(__file__))
+EVAL  = os.path.join(HERE, "eval", "gita_eval.json")
 MODEL = "gemini-2.5-flash-lite"          # separate free-tier quota from 2.5-flash
 
 

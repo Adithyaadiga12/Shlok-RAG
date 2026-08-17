@@ -15,8 +15,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from api import search          # reuse your exact /search logic
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EVAL = os.path.join(ROOT, "eval", "gita_eval.json")
+HERE = os.path.dirname(os.path.abspath(__file__))
+EVAL = os.path.join(HERE, "eval", "gita_eval.json")
 
 
 def measure(k=5):

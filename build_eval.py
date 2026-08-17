@@ -10,9 +10,11 @@ import sys
 import time
 import random
 
-ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSES = os.path.join(ROOT, "data", "rag", "verses.jsonl")
-OUT    = os.path.join(ROOT, "eval", "gita_eval.json")
+HERE   = os.path.dirname(os.path.abspath(__file__))
+# verses.jsonl comes from the dataset repo; override with VERSES_PATH env var
+VERSES = os.environ.get("VERSES_PATH",
+                        os.path.join(os.path.dirname(HERE), "data", "rag", "verses.jsonl"))
+OUT    = os.path.join(HERE, "eval", "gita_eval.json")
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # so we can import ask.py
 from ask import gemini_call

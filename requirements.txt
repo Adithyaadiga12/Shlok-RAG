@@ -1,6 +1,8 @@
 # RAG app dependencies
-sentence-transformers>=2.2.2
-faiss-cpu>=1.7.4
 fastapi>=0.110.0
 uvicorn>=0.27.0
+sentence-transformers>=2.2.2
+faiss-cpu>=1.7.4
 numpy>=1.24.0
+google-genai>=0.3.0
+python-dotenv>=1.0.0
