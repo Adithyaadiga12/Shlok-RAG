@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# secrets
+.env
+
+# generated index (rebuild with build_index.py)
+index/
+
+# model cache
+*.model

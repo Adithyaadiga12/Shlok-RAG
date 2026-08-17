@@ -16,10 +16,13 @@ from difflib import SequenceMatcher
 import faiss
 import numpy as np
 from fastapi import FastAPI, Query
+from fastapi.responses import FileResponse
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from ask import gemini_call,build_prompt
 
-INDEX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index")
+HERE      = os.path.dirname(os.path.abspath(__file__))
+INDEX_DIR = os.path.join(HERE, "index")
+STATIC    = os.path.join(HERE, "static")
 
 # ---- load index + metadata + the SAME model used to build it ----
 with open(os.path.join(INDEX_DIR, "config.json")) as f:
@@ -53,6 +56,12 @@ app = FastAPI(title="ShlokGPT RAG", description="Semantic search over Sanskrit v
 
 
 @app.get("/")
+def home():
+    """Serve the web UI."""
+    return FileResponse(os.path.join(STATIC, "index.html"))
+
+
+@app.get("/health")
 def health():
     return {"status": "ok", "verses_indexed": INDEX.ntotal, "model": CFG["model"]}
 

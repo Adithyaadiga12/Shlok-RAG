@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShlokRAG — Sanskrit Q&A</title>
+<style>
+  :root{
+    --bg:#faf6ef; --card:#fff; --ink:#2b2118; --muted:#7a6a58;
+    --accent:#b3541e; --accent2:#8a3d12; --line:#e7ddd968; --line2:#e7ddd9;
+    --dev:#5a3a1a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1a1613; --card:#241f1b; --ink:#f0e8df; --muted:#b3a494;
+           --accent:#e0894f; --accent2:#f0a56a; --line:#3a322b; --line2:#3a322b; --dev:#e8c9a0; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+  header{text-align:center;margin-bottom:28px}
+  h1{font-size:2.1rem;margin:0;letter-spacing:.5px}
+  h1 .om{color:var(--accent)}
+  .sub{color:var(--muted);margin-top:6px;font-size:.98rem}
+  .searchbar{display:flex;gap:8px;margin:22px 0 8px}
+  #q{flex:1;padding:14px 16px;font-size:1rem;border:1px solid var(--line2);border-radius:12px;
+     background:var(--card);color:var(--ink)}
+  #q:focus{outline:2px solid var(--accent);border-color:transparent}
+  #ask{padding:0 22px;font-size:1rem;font-weight:600;border:0;border-radius:12px;cursor:pointer;
+       background:var(--accent);color:#fff}
+  #ask:disabled{opacity:.5;cursor:default}
+  .hint{color:var(--muted);font-size:.85rem;text-align:center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+  .chip{font-size:.85rem;padding:6px 12px;border:1px solid var(--line2);border-radius:20px;
+        background:transparent;color:var(--muted);cursor:pointer}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  #status{text-align:center;color:var(--muted);margin:30px 0}
+  .answer{background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:22px;margin-top:26px}
+  .answer h2{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin:0 0 10px}
+  .answer p{margin:0;white-space:pre-wrap}
+  .srch{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:30px 0 12px}
+  .verse{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .verse .dev{font-size:1.15rem;color:var(--dev);margin-bottom:8px;line-height:1.7}
+  .verse .tr{color:var(--ink);font-size:.96rem}
+  .verse .meta{margin-top:10px;font-size:.8rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+  .verse .id{font-weight:700;color:var(--accent)}
+  footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:40px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="om">ॐ</span> ShlokRAG</h1>
+    <div class="sub">Ask a question — get answers grounded in the Rāmāyaṇa, Mahābhārata & Bhagavad Gītā</div>
+  </header>
+
+  <div class="searchbar">
+    <input id="q" placeholder="e.g. What is my duty in life?" autocomplete="off">
+    <button id="ask">Ask</button>
+  </div>
+  <div class="hint">Answers are generated only from retrieved verses, with citations.</div>
+  <div class="chips" id="chips"></div>
+
+  <div id="status"></div>
+  <div id="out"></div>
+
+  <footer>
+    Built on a from-scratch Sanskrit corpus •
+    <a href="https://github.com/Adithyaadiga12/Shlok-RAG" target="_blank">source</a>
+  </footer>
+</div>
+
+<script>
+const qEl = document.getElementById('q');
+const askBtn = document.getElementById('ask');
+const statusEl = document.getElementById('status');
+const outEl = document.getElementById('out');
+
+const examples = ["What is my duty in life?", "How do I control my mind?",
+                  "What happens after death?", "What is true knowledge?"];
+const chips = document.getElementById('chips');
+examples.forEach(t=>{
+  const b=document.createElement('button'); b.className='chip'; b.textContent=t;
+  b.onclick=()=>{ qEl.value=t; ask(); }; chips.appendChild(b);
+});
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+async function ask(){
+  const q = qEl.value.trim();
+  if(!q) return;
+  askBtn.disabled = true;
+  outEl.innerHTML = '';
+  statusEl.textContent = 'Searching the verses…';
+  try{
+    const r = await fetch('/ask?q=' + encodeURIComponent(q));
+    const data = await r.json();
+    statusEl.textContent = '';
+    render(data);
+  }catch(e){
+    statusEl.textContent = 'Something went wrong. Try again.';
+  }
+  askBtn.disabled = false;
+}
+
+function render(data){
+  const answer = data.Answer || '';
+  const sources = data.Sources || [];
+  let html = `<div class="answer"><h2>Answer</h2><p>${esc(answer)}</p></div>`;
+  if(sources.length){
+    html += `<div class="srch">Sources (${sources.length})</div>`;
+    for(const v of sources){
+      const ref = [v.source, v.chapter?('ch '+v.chapter):null, v.verse?('v '+v.verse):null]
+                    .filter(Boolean).join(' · ');
+      html += `<div class="verse">
+        <div class="dev">${esc(v.sanskrit)}</div>
+        <div class="tr">${esc(v.translation)}</div>
+        <div class="meta"><span class="id">[${esc(v.id)}]</span><span>${esc(ref)}</span></div>
+      </div>`;
+    }
+  }
+  outEl.innerHTML = html;
+}
+
+askBtn.onclick = ask;
+qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') ask(); });
+</script>
+</body>
+</html>

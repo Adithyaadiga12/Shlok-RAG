@@ -31,6 +31,20 @@ def build_prompt(question,verses):
   
 _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) 
     
-def gemini_call(prompt,model = "gemini-2.5-flash"):
-    response = _client.models.generate_content(model = model,contents = prompt)
-    return response.text
+import concurrent.futures
+
+# persistent executor — do NOT use a `with` block (its __exit__ waits for the
+# thread, which would cancel out the timeout and hang the app)
+_EXEC = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+
+
+def gemini_call(prompt, model="gemini-flash-lite-latest"):   # stable alias, highest free quota
+    """Call Gemini with a HARD 15s cap so a throttled/retrying request never hangs
+    the app. On timeout/error we return a friendly note; the retrieved verses are
+    still shown by the caller."""
+    fut = _EXEC.submit(lambda: _client.models.generate_content(model=model, contents=prompt).text)
+    try:
+        return fut.result(timeout=15)
+    except Exception:
+        return ("(The answer service is busy right now — see the retrieved verses below. "
+                "Please try again in a moment.)")
