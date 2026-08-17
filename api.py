@@ -11,6 +11,7 @@ then open http://127.0.0.1:8000/docs for an interactive UI.
 """
 import json
 import os
+import re
 from difflib import SequenceMatcher
 
 import faiss
@@ -100,10 +101,42 @@ def search(q: str = Query(..., description="natural-language or Sanskrit query")
 
 
 
+def structured_answer(q):
+    """Answer counting / chapter-listing queries directly from metadata
+    (no embeddings, no Gemini). Returns (answer, sources) or None."""
+    ql = q.lower()
+
+    # "verses/shlokas from chapter/adhyaya N"  -> list that Gita chapter
+    m = re.search(r"(?:chapter|adhyaya|adhyaaya|adhyay)\s*(\d+)", ql)
+    if m:
+        ch = m.group(1)
+        hits = [dict(x) for x in META if x.get("category") == "Gita" and str(x.get("chapter")) == ch]
+        hits.sort(key=lambda x: int(x.get("verse") or 0))
+        if hits:
+            return (f"Chapter {ch} of the Bhagavad Gita has {len(hits)} verses — here they are:", hits)
+        return (f"I don't have verses indexed for chapter {ch}.", [])
+
+    # "how many verses/shlokas [in the Gita / epics / total]"  -> count
+    if re.search(r"how many (verses|shlokas?|slokas?|shloka)", ql):
+        if any(w in ql for w in ("gita", "gītā", "bhagavad")):
+            n = sum(1 for x in META if x.get("category") == "Gita")
+            return (f"There are {n} Bhagavad Gita verses indexed.", [])
+        if any(w in ql for w in ("epic", "mahabharata", "mahābhārata", "ramayana", "rāmāyaṇa")):
+            n = sum(1 for x in META if x.get("category") == "Epic")
+            return (f"There are {n:,} epic (Ramayana + Mahabharata) verses indexed.", [])
+        n = sum(1 for x in META if x.get("category") in ("Gita", "Epic"))
+        return (f"There are {n:,} verses indexed in total.", [])
+
+    return None
+
+
 @app.get("/ask")
 def ask( q : str =Query(..., description="your question in natural language or Sanskrit") ,
         k : int=Query(5, ge=1, le=50)):
     """Return the answer to the question using the k most relevant verses."""
+    st = structured_answer(q)             # counts / chapter listings -> no embeddings, no Gemini
+    if st is not None:
+        return {"Query": q, "Answer": st[0], "Sources": st[1]}
     hits = search(q,k)["results"]
     if not hits:                          # nothing relevant -> don't call Gemini (saves quota)
         return {"Query": q, "Answer": "I couldn't find any relevant verses for that question.", "Sources": []}
