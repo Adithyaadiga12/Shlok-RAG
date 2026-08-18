@@ -68,6 +68,32 @@ Requires the FAISS index in `index/` (`shlok.faiss`, `meta.json`, `config.json`)
 Rebuild it with `python build_index.py` (needs `verses.jsonl` from the dataset —
 set `VERSES_PATH` to point at it).
 
+## Future work
+
+Retrieval and evaluation are solid but not maxed out. Concrete, doable next steps:
+
+- **Hybrid search (BM25 + dense)** — combine sparse keyword matching with the current
+  embedding search. Would help exact-term queries (proper nouns, rare Sanskrit terms)
+  that embeddings alone can blur; complements the cross-encoder reranker already in place.
+- **RAGAS for generation eval** — swap the hand-rolled RAG-triad judge
+  (`measure_generation.py`) for the standard RAGAS library (faithfulness, answer
+  relevancy, context precision/recall) for more rigorously validated metrics.
+- **Broaden the eval set beyond the Gītā** — the 75-question eval set is Gītā-only;
+  generating questions across Purāṇa/Kāvya/Dharmaśāstra categories (once translated)
+  would give a fuller picture of retrieval quality.
+- **Citation accuracy checking** — programmatically verify every `[verse-ID]` cited in
+  an answer is actually present in the retrieved sources (catches fabricated citations;
+  currently only checked manually).
+- **Latency profiling (p50/p95/p99)** — instrument each pipeline stage
+  (embed / FAISS search / rerank / LLM) with `time.perf_counter()` and report
+  percentiles, not just averages, to characterize the slow tail.
+- **Response streaming** — stream the LLM's answer token-by-token instead of waiting
+  for the full response, for a faster perceived time-to-first-token.
+- **Semantic cache** — cache answers for repeated/near-duplicate questions to cut
+  latency and LLM usage on a public deployment.
+- **Deploy** — the app is containerized (`Dockerfile`) and ready for a host with a free
+  compute tier (e.g. Google Cloud Run's scale-to-zero free tier).
+
 ## Project files
 
 | File | Purpose |
