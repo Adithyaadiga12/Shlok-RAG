@@ -1,6 +1,6 @@
-import os 
+import os
 from dotenv import load_dotenv
-from google import genai
+from groq import Groq
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -18,6 +18,7 @@ def build_prompt(question,verses):
         "knowledge, and note what the provided verses do or don't address.\n"
         "Keep the answer concise and clear.\n"
     )
+    
 
     context_lines = []
     for verse in verses:
@@ -29,8 +30,8 @@ def build_prompt(question,verses):
 
     return instructions + "\n" + context + "\n\n" + question_block
   
-_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) 
-    
+_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 import concurrent.futures
 
 # persistent executor — do NOT use a `with` block (its __exit__ waits for the
@@ -38,11 +39,18 @@ import concurrent.futures
 _EXEC = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
 
-def gemini_call(prompt, model="gemini-flash-lite-latest"):   # stable alias, highest free quota
-    """Call Gemini with a HARD 15s cap so a throttled/retrying request never hangs
+def gemini_call(prompt, model="openai/gpt-oss-120b"):   # Groq: fast (LPU) + strong open model
+    """Call the LLM (Groq) with a HARD 15s cap so a slow/throttled request never hangs
     the app. On timeout/error we return a friendly note; the retrieved verses are
     still shown by the caller."""
-    fut = _EXEC.submit(lambda: _client.models.generate_content(model=model, contents=prompt).text)
+    def _run():
+        resp = _client.chat.completions.create(
+            model=model,
+            reasoning_effort="low",     # skip heavy reasoning -> much faster for grounded summarizing
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
+    fut = _EXEC.submit(_run)
     try:
         return fut.result(timeout=15)
     except Exception:

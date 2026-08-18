@@ -1,4 +1,14 @@
-# ShlokGPT-RAG
+---
+title: ShlokRAG
+emoji: 📖
+colorFrom: orange
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+# ShlokRAG
 
 Semantic search + question-answering over classical Sanskrit texts — the
 **Rāmāyaṇa, Mahābhārata, and Bhagavad Gītā** (~93,700 English-translated verses).

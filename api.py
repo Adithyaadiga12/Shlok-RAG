@@ -146,8 +146,10 @@ def ask( q : str =Query(..., description="your question in natural language or S
 
 
 if __name__ == "__main__":
-    # lets you start the server with:  python rag/api.py
+    # 0.0.0.0 + PORT env so it works on Hugging Face Spaces (port 7860);
+    # locally it serves on http://localhost:7860
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    port = int(os.environ.get("PORT", "7860"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 

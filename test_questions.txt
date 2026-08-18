@@ -1,0 +1,87 @@
+========================================================================
+ ShlokRAG — QA TEST BATTERY
+ Run these at http://localhost:8000 (or the deployed link).
+ Each section notes WHAT TO LOOK FOR.
+========================================================================
+
+------------------------------------------------------------------------
+A. CORE THEMATIC QUESTIONS  (the app's strength)
+   Look for: coherent grounded answer with [verse-ID] citations + relevant verses.
+------------------------------------------------------------------------
+1.  What is my duty in life?
+2.  How do I control my mind and senses?
+3.  What happens to the soul after death?
+4.  How should I act without attachment to results?
+5.  What is the nature of the self?
+
+------------------------------------------------------------------------
+B. ENTITY QUESTIONS - "who is X"  (tests the entities index)
+   Look for: a real character description; sources include ENT-... entries.
+------------------------------------------------------------------------
+6.  Who are the Pandavas?
+7.  Who is Arjuna?
+8.  Who is Bhishma?
+9.  Who is Krishna?
+
+------------------------------------------------------------------------
+C. GLOSSARY QUESTIONS - "what is X"  (tests the glossary)
+   Look for: a clear definition; sources include GLO-... entries.
+------------------------------------------------------------------------
+10. What is dharma?
+11. What is karma?
+12. What is moksha?
+13. What is yoga?
+
+------------------------------------------------------------------------
+D. STRUCTURAL QUERIES  (metadata handler - instant, no LLM, no quota)
+   Look for: an immediate count/list, no "Searching..." delay.
+------------------------------------------------------------------------
+14. How many verses are in the Gita?          -> should say 719
+15. How many verses are there in total?
+16. Get me the verses from chapter 2
+17. Show me chapter 12
+
+------------------------------------------------------------------------
+E. BLENDED-KNOWLEDGE QUESTIONS  (tests the loosened prompt)
+   Look for: helpful answer using general knowledge + cites verses where relevant.
+------------------------------------------------------------------------
+18. What is the Bhagavad Gita about?
+19. What is the story of the Ramayana?
+
+------------------------------------------------------------------------
+F. EDGE CASES & ROBUSTNESS
+   Look for: graceful handling - NOT a crash or a made-up answer.
+------------------------------------------------------------------------
+20. Off-topic:   What's the best pizza recipe?     -> "couldn't find relevant verses" (gate)
+21. Gibberish:   asdfghjkl qwerty                  -> no relevant verses
+22. Wrong domain: How do I fix my car engine?      -> no relevant verses
+23. Very short:  duty        (then)  anger         -> should still retrieve sensibly
+24. Devanagari:  धर्म        (or)    कर्म          -> tests Sanskrit-script queries
+25. Multi-part:  What is dharma, and how does it relate to one's duty?
+26. Empty:       click Ask with an empty box       -> should do nothing (no error)
+
+------------------------------------------------------------------------
+G. GROUNDING / HONESTY CHECKS  (the most important)
+   Look for: it does NOT invent facts, and it cites.
+------------------------------------------------------------------------
+27. Out-of-scope fact: Who is the current Prime Minister of India?
+                       -> must say the verses don't cover this / no results (NO hallucination)
+28. Confirm citations like [BG3.35] appear in answers.
+29. Confirm the Sources list shows real, on-topic verses you can verify.
+
+------------------------------------------------------------------------
+H. RATE-LIMIT BEHAVIOR  (know the free-tier ceiling)
+   Look for: graceful degradation, not a hang.
+------------------------------------------------------------------------
+30. Ask 5-6 questions quickly in a row -> some may show
+    "answer service is busy... see the verses below" within ~15s, sources still shown.
+    (This is Gemini free-tier throttling - the reason to consider Groq before a public deploy.)
+
+========================================================================
+ QUICK SMOKE TEST (if short on time):
+   #6  (Pandavas)      - entities
+   #14 (count)         - structural
+   #16 (chapter 2)     - verse listing
+   #20 (pizza)         - relevance gate
+   #27 (PM of India)   - grounding / honesty
+========================================================================

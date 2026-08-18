@@ -6,125 +6,131 @@
 <title>ShlokRAG — Sanskrit Q&A</title>
 <style>
   :root{
-    --bg:#faf6ef; --card:#fff; --ink:#2b2118; --muted:#7a6a58;
-    --accent:#b3541e; --accent2:#8a3d12; --line:#e7ddd968; --line2:#e7ddd9;
-    --dev:#5a3a1a;
+    --bg:#f7f2e9; --card:#fffdf9; --ink:#2a2016; --muted:#8a7a64;
+    --accent:#b3541e; --accent2:#8a3d12; --line:#e8ddcb;
   }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg:#1a1613; --card:#241f1b; --ink:#f0e8df; --muted:#b3a494;
-           --accent:#e0894f; --accent2:#f0a56a; --line:#3a322b; --line2:#3a322b; --dev:#e8c9a0; }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --bg:#171310; --card:#231d18; --ink:#f1e9df; --muted:#a99a86;
+      --accent:#e2894e; --accent2:#f2a869; --line:#362d24;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#171310; --card:#231d18; --ink:#f1e9df; --muted:#a99a86;
+    --accent:#e2894e; --accent2:#f2a869; --line:#362d24;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.55}
-  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:680px;margin:0 auto;padding:44px 20px 80px}
+
   header{text-align:center;margin-bottom:28px}
-  h1{font-size:2.1rem;margin:0;letter-spacing:.5px}
-  h1 .om{color:var(--accent)}
-  .sub{color:var(--muted);margin-top:6px;font-size:.98rem}
-  .searchbar{display:flex;gap:8px;margin:22px 0 8px}
-  #q{flex:1;padding:14px 16px;font-size:1rem;border:1px solid var(--line2);border-radius:12px;
+  .logo{width:64px;height:64px;margin:0 auto 14px;border-radius:18px;display:grid;place-items:center;
+        background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+        font-size:1.4rem;font-weight:700;transform:rotate(-5deg);transition:transform .2s}
+  .logo:hover{transform:rotate(0deg) scale(1.05)}
+  .logo span{transform:rotate(5deg);display:block}
+  h1{font-size:2.1rem;margin:0;font-weight:800;letter-spacing:.4px}
+  .tagline{color:var(--muted);margin-top:8px;font-size:.98rem}
+
+  .searchbar{display:flex;gap:10px;margin:26px 0 8px}
+  #q{flex:1;padding:14px 16px;font-size:1rem;border:1px solid var(--line);border-radius:12px;
      background:var(--card);color:var(--ink)}
-  #q:focus{outline:2px solid var(--accent);border-color:transparent}
-  #ask{padding:0 22px;font-size:1rem;font-weight:600;border:0;border-radius:12px;cursor:pointer;
+  #q:focus{outline:none;border-color:var(--accent)}
+  #ask{padding:0 24px;font-size:1rem;font-weight:700;border:0;border-radius:12px;cursor:pointer;
        background:var(--accent);color:#fff}
   #ask:disabled{opacity:.5;cursor:default}
-  .hint{color:var(--muted);font-size:.85rem;text-align:center}
   .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
-  .chip{font-size:.85rem;padding:6px 12px;border:1px solid var(--line2);border-radius:20px;
-        background:transparent;color:var(--muted);cursor:pointer}
+  .chip{font-size:.85rem;padding:6px 12px;border:1px solid var(--line);border-radius:20px;
+        background:var(--card);color:var(--muted);cursor:pointer}
   .chip:hover{border-color:var(--accent);color:var(--accent)}
-  #status{text-align:center;color:var(--muted);margin:30px 0}
-  .answer{background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:22px;margin-top:26px}
-  .answer h2{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin:0 0 10px}
+
+  #status{text-align:center;color:var(--muted);margin:32px 0}
+  .answer{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:26px}
+  .label{font-size:.72rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);
+         font-weight:700;margin:0 0 10px}
   .answer p{margin:0;white-space:pre-wrap}
-  .srch{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:30px 0 12px}
-  .verse{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:16px 18px;margin-bottom:12px}
-  .verse .dev{font-size:1.15rem;color:var(--dev);margin-bottom:8px;line-height:1.7}
-  .verse .tr{color:var(--ink);font-size:.96rem}
-  .verse .meta{margin-top:10px;font-size:.8rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+
+  .srch{font-size:.72rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);
+        font-weight:700;margin:30px 0 12px}
+  .verse{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+  .verse .dev{font-size:1.18rem;color:var(--accent2);margin-bottom:8px;line-height:1.8}
+  .verse .tr{font-size:.96rem}
+  .verse .meta{margin-top:10px;font-size:.8rem;color:var(--muted)}
   .verse .id{font-weight:700;color:var(--accent)}
-  footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:40px}
-  a{color:var(--accent)}
+
+  footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:44px;
+         padding-top:20px;border-top:1px solid var(--line)}
+  footer a{color:var(--accent);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  footer .name{color:var(--ink);font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="om">ॐ</span> ShlokRAG</h1>
-    <div class="sub">Ask a question — get answers grounded in the Rāmāyaṇa, Mahābhārata & Bhagavad Gītā</div>
+    <div class="logo"><span>श्लो</span></div>
+    <h1>ShlokRAG</h1>
+    <div class="tagline">Ask about the Rāmāyaṇa, Mahābhārata &amp; Bhagavad Gītā — answers cite their verses.</div>
   </header>
 
   <div class="searchbar">
     <input id="q" placeholder="e.g. What is my duty in life?" autocomplete="off">
     <button id="ask">Ask</button>
   </div>
-  <div class="hint">Answers are generated only from retrieved verses, with citations.</div>
   <div class="chips" id="chips"></div>
 
   <div id="status"></div>
   <div id="out"></div>
 
   <footer>
-    Built on a from-scratch Sanskrit corpus •
-    <a href="https://github.com/Adithyaadiga12/Shlok-RAG" target="_blank">source</a>
+    <div class="name">Adithya Adiga</div>
+    <div style="margin-top:4px">
+      <a href="mailto:adithyaadiga21@gmail.com">adithyaadiga21@gmail.com</a> ·
+      <a href="https://github.com/Adithyaadiga12" target="_blank">github.com/Adithyaadiga12</a>
+    </div>
   </footer>
 </div>
 
 <script>
-const qEl = document.getElementById('q');
-const askBtn = document.getElementById('ask');
-const statusEl = document.getElementById('status');
-const outEl = document.getElementById('out');
+const qEl=document.getElementById('q'), askBtn=document.getElementById('ask'),
+      statusEl=document.getElementById('status'), outEl=document.getElementById('out');
 
-const examples = ["What is my duty in life?", "How do I control my mind?",
-                  "What happens after death?", "What is true knowledge?"];
-const chips = document.getElementById('chips');
-examples.forEach(t=>{
-  const b=document.createElement('button'); b.className='chip'; b.textContent=t;
-  b.onclick=()=>{ qEl.value=t; ask(); }; chips.appendChild(b);
-});
+const examples=["What is my duty in life?","How do I control my mind?","Who are the Pandavas?","What is dharma?"];
+const chips=document.getElementById('chips');
+examples.forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;
+  b.onclick=()=>{qEl.value=t;ask();};chips.appendChild(b);});
 
-function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 
 async function ask(){
-  const q = qEl.value.trim();
-  if(!q) return;
-  askBtn.disabled = true;
-  outEl.innerHTML = '';
-  statusEl.textContent = 'Searching the verses…';
+  const q=qEl.value.trim(); if(!q) return;
+  askBtn.disabled=true; outEl.innerHTML=''; statusEl.textContent='Searching the verses…';
   try{
-    const r = await fetch('/ask?q=' + encodeURIComponent(q));
-    const data = await r.json();
-    statusEl.textContent = '';
-    render(data);
-  }catch(e){
-    statusEl.textContent = 'Something went wrong. Try again.';
-  }
-  askBtn.disabled = false;
+    const r=await fetch('/ask?q='+encodeURIComponent(q));
+    const d=await r.json(); statusEl.textContent=''; render(d);
+  }catch(e){ statusEl.textContent='Something went wrong. Please try again.'; }
+  askBtn.disabled=false;
 }
 
-function render(data){
-  const answer = data.Answer || '';
-  const sources = data.Sources || [];
-  let html = `<div class="answer"><h2>Answer</h2><p>${esc(answer)}</p></div>`;
-  if(sources.length){
-    html += `<div class="srch">Sources (${sources.length})</div>`;
-    for(const v of sources){
-      const ref = [v.source, v.chapter?('ch '+v.chapter):null, v.verse?('v '+v.verse):null]
-                    .filter(Boolean).join(' · ');
-      html += `<div class="verse">
-        <div class="dev">${esc(v.sanskrit)}</div>
+function render(d){
+  const ans=d.Answer||'', src=d.Sources||[];
+  let h=`<div class="answer"><div class="label">Answer</div><p>${esc(ans)}</p></div>`;
+  if(src.length){
+    h+=`<div class="srch">Sources · ${src.length} verse${src.length>1?'s':''}</div>`;
+    for(const v of src){
+      const meta=[v.source, v.chapter?('ch '+v.chapter):null, v.verse?('v '+v.verse):null].filter(Boolean).join(' · ');
+      h+=`<div class="verse">
+        ${v.sanskrit?`<div class="dev">${esc(v.sanskrit)}</div>`:``}
         <div class="tr">${esc(v.translation)}</div>
-        <div class="meta"><span class="id">[${esc(v.id)}]</span><span>${esc(ref)}</span></div>
+        <div class="meta"><span class="id">${esc(v.id)}</span> — ${esc(meta)}</div>
       </div>`;
     }
   }
-  outEl.innerHTML = html;
+  outEl.innerHTML=h;
 }
-
-askBtn.onclick = ask;
-qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') ask(); });
+askBtn.onclick=ask;
+qEl.addEventListener('keydown',e=>{ if(e.key==='Enter') ask(); });
 </script>
 </body>
 </html>
